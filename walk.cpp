@@ -31,8 +31,8 @@ typedef Flt	Matrix[4][4];
 #define VecCopy(a,b) (b)[0]=(a)[0];(b)[1]=(a)[1];(b)[2]=(a)[2]
 #define VecDot(a,b)	((a)[0]*(b)[0]+(a)[1]*(b)[1]+(a)[2]*(b)[2])
 #define VecSub(a,b,c) (c)[0]=(a)[0]-(b)[0]; \
-                      (c)[1]=(a)[1]-(b)[1]; \
-                      (c)[2]=(a)[2]-(b)[2]
+							 (c)[1]=(a)[1]-(b)[1]; \
+(c)[2]=(a)[2]-(b)[2]
 //constants
 const float timeslice = 1.0f;
 const float gravity = -0.2f;
@@ -57,56 +57,56 @@ void render(void);
 //-----------------------------------------------------------------------------
 //Setup timers
 class Timers {
-public:
-	double physicsRate;
-	double oobillion;
-	struct timespec timeStart, timeEnd, timeCurrent;
-	struct timespec walkTime;
-	Timers() {
-		physicsRate = 1.0 / 30.0;
-		oobillion = 1.0 / 1e9;
-	}
-	double timeDiff(struct timespec *start, struct timespec *end) {
-		return (double)(end->tv_sec - start->tv_sec ) +
+	public:
+		double physicsRate;
+		double oobillion;
+		struct timespec timeStart, timeEnd, timeCurrent;
+		struct timespec walkTime;
+		Timers() {
+			physicsRate = 1.0 / 30.0;
+			oobillion = 1.0 / 1e9;
+		}
+		double timeDiff(struct timespec *start, struct timespec *end) {
+			return (double)(end->tv_sec - start->tv_sec ) +
 				(double)(end->tv_nsec - start->tv_nsec) * oobillion;
-	}
-	void timeCopy(struct timespec *dest, struct timespec *source) {
-		memcpy(dest, source, sizeof(struct timespec));
-	}
-	void recordTime(struct timespec *t) {
-		clock_gettime(CLOCK_REALTIME, t);
-	}
+		}
+		void timeCopy(struct timespec *dest, struct timespec *source) {
+			memcpy(dest, source, sizeof(struct timespec));
+		}
+		void recordTime(struct timespec *t) {
+			clock_gettime(CLOCK_REALTIME, t);
+		}
 } timers;
 //-----------------------------------------------------------------------------
 
 class Global {
-public:
-	int done;
-	int keys[65535];
-	int xres, yres;
-	int walk;
-	int rwalk;
-	int lwalk;
-	int walkFrame;
-	double delay;
-	Ppmimage *walkImage;
-	GLuint walkTexture;
-	Vec box[20];
-	Global() {
-		done=0;
-		xres=800;
-		yres=600;
-		walk=0;
-		walkFrame=0;
-		walkImage=NULL;
-		delay = 0.1;
-		for (int i=0; i<20; i++) {
-			box[i][0] = rnd() * xres;
-			box[i][1] = rnd() * (yres-220) + 220.0;
-			box[i][2] = 0.0;
+	public:
+		int done;
+		int keys[65535];
+		int xres, yres;
+		int walk;
+		int rwalk;
+		int lwalk;
+		int walkFrame;
+		double delay;
+		Ppmimage *walkImage;
+		GLuint walkTexture;
+		Vec box[20];
+		Global() {
+			done=0;
+			xres=800;
+			yres=600;
+			walk=0;
+			walkFrame=0;
+			walkImage=NULL;
+			delay = 0.1;
+			for (int i=0; i<20; i++) {
+				box[i][0] = rnd() * xres;
+				box[i][1] = rnd() * (yres-220) + 220.0;
+				box[i][2] = 0.0;
+			}
+			memset(keys, 0, 65535);
 		}
-		memset(keys, 0, 65535);
-	}
 } gl;
 
 int main(void)
@@ -170,10 +170,10 @@ void initXWindows(void)
 	Colormap cmap = XCreateColormap(dpy, root, vi->visual, AllocNone);
 	swa.colormap = cmap;
 	swa.event_mask = ExposureMask | KeyPressMask | KeyReleaseMask |
-						StructureNotifyMask | SubstructureNotifyMask;
+		StructureNotifyMask | SubstructureNotifyMask;
 	win = XCreateWindow(dpy, root, 0, 0, gl.xres, gl.yres, 0,
-							vi->depth, InputOutput, vi->visual,
-							CWColormap | CWEventMask, &swa);
+			vi->depth, InputOutput, vi->visual,
+			CWColormap | CWEventMask, &swa);
 	GLXContext glc = glXCreateContext(dpy, vi, NULL, GL_TRUE);
 	glXMakeCurrent(dpy, win, glc);
 	setTitle();
@@ -264,7 +264,7 @@ void initOpengl(void)
 	//must build a new set of data...
 	unsigned char *walkData = buildAlphaData(gl.walkImage);	
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0,
-							GL_RGBA, GL_UNSIGNED_BYTE, walkData);
+			GL_RGBA, GL_UNSIGNED_BYTE, walkData);
 	free(walkData);
 	unlink("./images/walk.ppm");
 	//-------------------------------------------------------------------------
@@ -396,7 +396,7 @@ Flt VecNormalize(Vec vec)
 void physics(void)
 {
 	if (gl.walk && rt) {
-		
+
 		//man is walking...
 		//when time is up, advance the frame.
 		timers.recordTime(&timers.timeCurrent);
@@ -425,13 +425,13 @@ void physics(void)
 				gl.walkFrame -= 16;
 			timers.recordTime(&timers.walkTime);
 		}
-		
+
 		for (int i=0; i<20; i++) {
 			gl.box[i][0] += 2.0 * (0.05 / gl.delay);
 			if (gl.box[i][0] > 800.0)
 				gl.box[i][0] -= gl.xres ;
 		}
-	
+
 	}
 	else if(gl.walk) {
 		timers.recordTime(&timers.timeCurrent);
@@ -443,7 +443,7 @@ void physics(void)
 				gl.walkFrame -= 16;
 			timers.recordTime(&timers.walkTime);
 		}
-		
+
 		for (int i=0; i<20; i++) {
 			gl.box[i][0] += 2.0 * (0.05 / gl.delay);
 			if (gl.box[i][0] > 800.0)
@@ -451,43 +451,6 @@ void physics(void)
 		}
 	}
 }
-
-
-		/* Gordon's ORIGINAL loop	
-		for (int i=0; i<20; i++) {
-			gl.box[i][0] -= 2.0 * (0.05 / gl.delay);
-			if (gl.box[i][0] > -10.0)
-				gl.box[i][0] += gl.xres + 10.0;
-		}
-		*/
-		/*if (lt) {
-			for (int i=0; i<20; i++) {
-				gl.box[i][0] += 2.0 * (0.05 / gl.delay);
-					if (gl.box[i][0] > 800.0)
-						gl.box[i][0] -= gl.xres ;
-			}
-		}
-		if (rt) {	
-		for (int i=0; i<20; i++) {
-			gl.box[i][0] -= 2.0 * (0.05 / gl.delay);
-			if (gl.box[i][0] > -100.0)
-				gl.box[i][0] += gl.xres + 10.0;
-		}
-		}*/
-		/*else {
-		for (int i=0; i<20; i++) {
-			gl.box[i][0] -= 2.0 * (0.05 / gl.delay);
-			if (gl.box[i][0] > -100.0)
-				gl.box[i][0] += gl.xres + 10.0;
-
-		}}*/
-		/*
-		for (int i=0; i<20; i++) {
-			gl.box[i][0] += 2.0 * (0.05 / gl.delay);
-			if (gl.box[i][0] > 800.0)
-				gl.box[i][0] -= gl.xres ;
-		}*/
-	
 
 void render(void)
 {
@@ -500,12 +463,12 @@ void render(void)
 	//
 	//show ground
 	glBegin(GL_QUADS);
-		glColor3f(0.2, 0.2, 0.2);
-		glVertex2i(0,       220);
-		glVertex2i(gl.xres, 220);
-		glColor3f(0.4, 0.4, 0.4);
-		glVertex2i(gl.xres,   0);
-		glVertex2i(0,         0);
+	glColor3f(0.2, 0.2, 0.2);
+	glVertex2i(0,       220);
+	glVertex2i(gl.xres, 220);
+	glColor3f(0.4, 0.4, 0.4);
+	glVertex2i(gl.xres,   0);
+	glVertex2i(0,         0);
 	glEnd();
 	//
 	//fake shadow
@@ -523,68 +486,73 @@ void render(void)
 		glTranslated(gl.box[i][0],gl.box[i][1],gl.box[i][2]);
 		glColor3f(0.2, 0.2, 0.2);
 		glBegin(GL_QUADS);
-			glVertex2i( 0,  0);
-			glVertex2i( 0, 30);
-			glVertex2i(20, 30);
-			glVertex2i(20,  0);
+		glVertex2i( 0,  0);
+		glVertex2i( 0, 30);
+		glVertex2i(20, 30);
+		glVertex2i(20,  0);
 		glEnd();
 		glPopMatrix();
 	}
+	
 	float h = 200.0;
 	float w = h * 0.5;
 	glPushMatrix();
 	glColor3f(1.0, 1.0, 1.0);
 	glBindTexture(GL_TEXTURE_2D, gl.walkTexture);
+	
 	//
 	glEnable(GL_ALPHA_TEST);
 	glAlphaFunc(GL_GREATER, 0.0f);
 	glColor4ub(255,255,255,255);
+	
 	int ix = gl.walkFrame % 8;
 	int iy = 0;
 	if (gl.walkFrame >= 8)
 		iy = 1;
+	
+	
 	float tx = (float)ix / 8.0;
 	float ty = (float)iy / 2.0;
-//////////////////// Made some shanges in here, go back to original if needed
-	
+	//////////////////// Made some shanges in here, go back to original if needed
+
 
 	if (rt) {
-	glBegin(GL_QUADS);
-		glTexCoord2f(tx,      ty+.5); glVertex2i(cx-w, cy-h);
-		glTexCoord2f(tx,      ty);    glVertex2i(cx-w, cy+h);
-		glTexCoord2f(tx+.125, ty);    glVertex2i(cx+w, cy+h);
-		glTexCoord2f(tx+.125, ty+.5); glVertex2i(cx+w, cy-h);
-	glEnd();
-	glPopMatrix();
-	glBindTexture(GL_TEXTURE_2D, 0);
-	glDisable(GL_ALPHA_TEST);
-	}
-	else  {
-	glBegin(GL_QUADS);
-		glTexCoord2f(tx,      ty+.5); glVertex2i(cx-w, cy-h);
-		glTexCoord2f(tx,      ty);    glVertex2i(cx-w, cy+h);
-		glTexCoord2f(tx-.125, ty);    glVertex2i(cx+w, cy+h);
-		glTexCoord2f(tx-.125, ty+.5); glVertex2i(cx+w, cy-h);
-	glEnd();
-	glPopMatrix();
-	glBindTexture(GL_TEXTURE_2D, 0);
-	glDisable(GL_ALPHA_TEST);
-	}
-
-	/*
-	else {
 		glBegin(GL_QUADS);
 		glTexCoord2f(tx,      ty+.5); glVertex2i(cx-w, cy-h);
 		glTexCoord2f(tx,      ty);    glVertex2i(cx-w, cy+h);
 		glTexCoord2f(tx+.125, ty);    glVertex2i(cx+w, cy+h);
 		glTexCoord2f(tx+.125, ty+.5); glVertex2i(cx+w, cy-h);
-	glEnd();
+		glEnd();
+		glPopMatrix();
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glDisable(GL_ALPHA_TEST);
+	}
+	else {
+		glBegin(GL_QUADS);
+		glTexCoord2f(tx,      ty+.5); glVertex2i(cx-w, cy-h);
+		glTexCoord2f(tx,      ty);    glVertex2i(cx-w, cy+h);
+		glTexCoord2f(tx-.125, ty);    glVertex2i(cx+w, cy+h);
+		glTexCoord2f(tx-.125, ty+.5); glVertex2i(cx+w, cy-h);
+		glEnd();
+		glPopMatrix();
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glDisable(GL_ALPHA_TEST);
+	}
 
-	glPopMatrix();
-	glBindTexture(GL_TEXTURE_2D, 0);
-	glDisable(GL_ALPHA_TEST);
-	}*/
-		
+	/*
+	   else {
+	   glBegin(GL_QUADS);
+	   glTexCoord2f(tx,      ty+.5); glVertex2i(cx-w, cy-h);
+	   glTexCoord2f(tx,      ty);    glVertex2i(cx-w, cy+h);
+	   glTexCoord2f(tx+.125, ty);    glVertex2i(cx+w, cy+h);
+	   glTexCoord2f(tx+.125, ty+.5); glVertex2i(cx+w, cy-h);
+	   glEnd();
+
+	   glPopMatrix();
+	   glBindTexture(GL_TEXTURE_2D, 0);
+	   glDisable(GL_ALPHA_TEST);
+	   }*/
+
 	//
 	unsigned int c = 0x00ffff44;
 	r.bot = gl.yres - 20;
