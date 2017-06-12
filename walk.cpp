@@ -218,6 +218,7 @@ unsigned char *buildAlphaData(Ppmimage *img)
 		ptr += 4;
 		data += 3;
 	}
+	
 	return newdata;
 }
 
@@ -409,13 +410,14 @@ void physics(void)
 				gl.walkFrame -= 16;
 			timers.recordTime(&timers.walkTime);
 		}
+		
 		for (int i=0; i<20; i++) {
 			gl.box[i][0] -= 2.0 * (0.05 / gl.delay);
 			if (gl.box[i][0] < -10.0)
 				gl.box[i][0] += gl.xres + 10.0;
+		
 		}
-	}
-	else if (gl.walk && lt)  {
+	} else if (gl.walk && lt)  {
 		timers.recordTime(&timers.timeCurrent);
 		double timeSpan = timers.timeDiff(&timers.walkTime, &timers.timeCurrent);
 		if (timeSpan > gl.delay) {
@@ -432,8 +434,7 @@ void physics(void)
 				gl.box[i][0] -= gl.xres ;
 		}
 
-	}
-	else if(gl.walk) {
+	} else if(gl.walk) {
 		timers.recordTime(&timers.timeCurrent);
 		double timeSpan = timers.timeDiff(&timers.walkTime, &timers.timeCurrent);
 		if (timeSpan > gl.delay) {
@@ -526,8 +527,7 @@ void render(void)
 		glPopMatrix();
 		glBindTexture(GL_TEXTURE_2D, 0);
 		glDisable(GL_ALPHA_TEST);
-	}
-	else {
+	} else {
 		glBegin(GL_QUADS);
 		glTexCoord2f(tx,      ty+.5); glVertex2i(cx-w, cy-h);
 		glTexCoord2f(tx,      ty);    glVertex2i(cx-w, cy+h);
