@@ -1,3 +1,7 @@
+//
+//
+//
+//
 //3350
 //program: walk.cpp
 //author:  Gordon Griesel
@@ -42,7 +46,7 @@ const float gravity = -0.2f;
 Display *dpy;
 Window win;
 bool lt =0;
-bool rt=0;
+
 //function prototypes
 void initXWindows(void);
 void initOpengl(void);
@@ -82,7 +86,7 @@ class Timers {
 class Global {
 	public:
 		int done;
-		int keys[65535];
+		unsigned char keys[65536];
 		int xres, yres;
 		int walk;
 		int rwalk;
@@ -92,6 +96,7 @@ class Global {
 		Ppmimage *walkImage;
 		GLuint walkTexture;
 		Vec box[20];
+
 		Global() {
 			done=0;
 			xres=800;
@@ -105,7 +110,7 @@ class Global {
 				box[i][1] = rnd() * (yres-220) + 220.0;
 				box[i][2] = 0.0;
 			}
-			memset(keys, 0, 65535);
+			memset(keys, 0, 65536);
 		}
 } gl;
 
@@ -218,7 +223,7 @@ unsigned char *buildAlphaData(Ppmimage *img)
 		ptr += 4;
 		data += 3;
 	}
-	
+
 	return newdata;
 }
 
@@ -313,20 +318,28 @@ void checkMouse(XEvent *e)
 	}
 }
 
+void screenCapture()
+{
+
+
+}
+
 void checkKeys(XEvent *e)
 {
 	//keyboard input?
 	static int shift=0;
 	int key = XLookupKeysym(&e->xkey, 0);
 	if (e->type == KeyRelease) {
+		gl.keys[key] = 0;	
 		if (key == XK_Shift_L || key == XK_Shift_R )
 			shift=0;
 		if (key == XK_Right || key == XK_Left) {
-			gl.walk =0;
+			gl.walk^=0;
 		}
 		return;
 	}
 	if (e->type == KeyPress) {
+		gl.keys[key] = 1;	
 		if (key == XK_Shift_L || key == XK_Shift_R) {
 			shift=1;
 			return;
@@ -334,23 +347,22 @@ void checkKeys(XEvent *e)
 	} else {
 		return;
 	}
+
 	if (shift) {}
 	switch (key) {
+		case XK_s:
+			screenCapture();	    
 		case XK_w:
 			timers.recordTime(&timers.walkTime);
 			gl.walk ^= 1;
 			break;
 
 		case XK_Left:
-			lt= 1;
-			rt=0;
-			gl.walk ^= 1;
+			lt =1;
 			break;
 
 		case XK_Right:
-			rt=1;
-			lt=0;
-			gl.walk ^= 1;
+			lt =0;
 			break;
 
 		case XK_Up:
@@ -396,9 +408,8 @@ Flt VecNormalize(Vec vec)
 
 void physics(void)
 {
-	if (gl.walk && rt) {
 
-		//man is walking...
+	if (gl.walk || gl.keys[XK_Right] || gl.keys[XK_Left]) { 
 		//when time is up, advance the frame.
 		timers.recordTime(&timers.timeCurrent);
 		double timeSpan = timers.timeDiff(&timers.walkTime, &timers.timeCurrent);
@@ -410,45 +421,20 @@ void physics(void)
 				gl.walkFrame -= 16;
 			timers.recordTime(&timers.walkTime);
 		}
-		
-		for (int i=0; i<20; i++) {
-			gl.box[i][0] -= 2.0 * (0.05 / gl.delay);
-			if (gl.box[i][0] < -10.0)
-				gl.box[i][0] += gl.xres + 10.0;
-		
-		}
-	} else if (gl.walk && lt)  {
-		timers.recordTime(&timers.timeCurrent);
-		double timeSpan = timers.timeDiff(&timers.walkTime, &timers.timeCurrent);
-		if (timeSpan > gl.delay) {
-			//advance
-			++gl.walkFrame;
-			if (gl.walkFrame >= 16)
-				gl.walkFrame -= 16;
-			timers.recordTime(&timers.walkTime);
-		}
 
 		for (int i=0; i<20; i++) {
-			gl.box[i][0] += 2.0 * (0.05 / gl.delay);
-			if (gl.box[i][0] > 800.0)
-				gl.box[i][0] -= gl.xres ;
-		}
 
-	} else if(gl.walk) {
-		timers.recordTime(&timers.timeCurrent);
-		double timeSpan = timers.timeDiff(&timers.walkTime, &timers.timeCurrent);
-		if (timeSpan > gl.delay) {
-			//advance
-			++gl.walkFrame;
-			if (gl.walkFrame >= 16)
-				gl.walkFrame -= 16;
-			timers.recordTime(&timers.walkTime);
-		}
+			if (lt) {
+				gl.box[i][0] += 2.0 * (0.05 / gl.delay);
+				if (gl.box[i][0] > 800.0)	
+					gl.box[i][0] -= gl.xres;
+			}else{
+				gl.box[i][0] -= 2.0 * (0.05 / gl.delay);
+				if (gl.box[i][0] < -10.0)
+					gl.box[i][0] += gl.xres + 10.0;
 
-		for (int i=0; i<20; i++) {
-			gl.box[i][0] += 2.0 * (0.05 / gl.delay);
-			if (gl.box[i][0] > 800.0)
-				gl.box[i][0] -= gl.xres ;
+
+			}
 		}
 	}
 }
@@ -492,68 +478,47 @@ void render(void)
 		glVertex2i(20, 30);
 		glVertex2i(20,  0);
 		glEnd();
+
 		glPopMatrix();
 	}
-	
+
 	float h = 200.0;
 	float w = h * 0.5;
 	glPushMatrix();
 	glColor3f(1.0, 1.0, 1.0);
 	glBindTexture(GL_TEXTURE_2D, gl.walkTexture);
-	
+
 	//
 	glEnable(GL_ALPHA_TEST);
 	glAlphaFunc(GL_GREATER, 0.0f);
 	glColor4ub(255,255,255,255);
-	
+
 	int ix = gl.walkFrame % 8;
 	int iy = 0;
 	if (gl.walkFrame >= 8)
 		iy = 1;
-	
-	
+
 	float tx = (float)ix / 8.0;
 	float ty = (float)iy / 2.0;
 	//////////////////// Made some shanges in here, go back to original if needed
 
-
-	if (rt) {
-		glBegin(GL_QUADS);
-		glTexCoord2f(tx,      ty+.5); glVertex2i(cx-w, cy-h);
-		glTexCoord2f(tx,      ty);    glVertex2i(cx-w, cy+h);
-		glTexCoord2f(tx+.125, ty);    glVertex2i(cx+w, cy+h);
-		glTexCoord2f(tx+.125, ty+.5); glVertex2i(cx+w, cy-h);
-		glEnd();
-		glPopMatrix();
-		glBindTexture(GL_TEXTURE_2D, 0);
-		glDisable(GL_ALPHA_TEST);
+	glBegin(GL_QUADS);
+	if ( lt ) {
+		glTexCoord2f(tx,	ty+.5); glVertex2i(cx-w, cy-h);
+		glTexCoord2f(tx,	ty);    glVertex2i(cx-w, cy+h);
+		glTexCoord2f(tx-.125,		ty);    glVertex2i(cx+w, cy+h);
+		glTexCoord2f(tx-.125,		ty+.5); glVertex2i(cx+w, cy-h);
 	} else {
-		glBegin(GL_QUADS);
-		glTexCoord2f(tx,      ty+.5); glVertex2i(cx-w, cy-h);
-		glTexCoord2f(tx,      ty);    glVertex2i(cx-w, cy+h);
-		glTexCoord2f(tx-.125, ty);    glVertex2i(cx+w, cy+h);
-		glTexCoord2f(tx-.125, ty+.5); glVertex2i(cx+w, cy-h);
-		glEnd();
-		glPopMatrix();
-		glBindTexture(GL_TEXTURE_2D, 0);
-		glDisable(GL_ALPHA_TEST);
+		glTexCoord2f(tx,		ty+.5); glVertex2i(cx-w, cy-h);
+		glTexCoord2f(tx,		ty);    glVertex2i(cx-w, cy+h);
+		glTexCoord2f(tx+.125,	ty);    glVertex2i(cx+w, cy+h);
+		glTexCoord2f(tx+.125,	ty+.5); glVertex2i(cx+w, cy-h);
 	}
+	glEnd();
+	glPopMatrix();
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glDisable(GL_ALPHA_TEST);
 
-	/*
-	   else {
-	   glBegin(GL_QUADS);
-	   glTexCoord2f(tx,      ty+.5); glVertex2i(cx-w, cy-h);
-	   glTexCoord2f(tx,      ty);    glVertex2i(cx-w, cy+h);
-	   glTexCoord2f(tx+.125, ty);    glVertex2i(cx+w, cy+h);
-	   glTexCoord2f(tx+.125, ty+.5); glVertex2i(cx+w, cy-h);
-	   glEnd();
-
-	   glPopMatrix();
-	   glBindTexture(GL_TEXTURE_2D, 0);
-	   glDisable(GL_ALPHA_TEST);
-	   }*/
-
-	//
 	unsigned int c = 0x00ffff44;
 	r.bot = gl.yres - 20;
 	r.left = 10;
@@ -565,10 +530,3 @@ void render(void)
 	ggprint8b(&r, 16, c, "left arrow  <- walk left");
 	ggprint8b(&r, 16, c, "frame: %i", gl.walkFrame);
 }
-
-
-
-
-
-
-
