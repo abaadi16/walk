@@ -1,5 +1,6 @@
-//
-//
+// Modified by: Abdulelah Aldeshash
+// Date: June/19/2017
+// Puropse: Add extra features to Gordon's walk frame
 //
 //
 //3350
@@ -57,7 +58,7 @@ void checkKeys(XEvent *e);
 void init();
 void physics(void);
 void render(void);
-
+void screenCapture(void);
 //-----------------------------------------------------------------------------
 //Setup timers
 class Timers {
@@ -89,6 +90,7 @@ class Global {
 		unsigned char keys[65536];
 		int xres, yres;
 		int walk;
+		int movie;
 		int rwalk;
 		int lwalk;
 		int walkFrame;
@@ -98,6 +100,7 @@ class Global {
 		Vec box[20];
 
 		Global() {
+			movie=0;
 			done=0;
 			xres=800;
 			yres=600;
@@ -293,6 +296,7 @@ void init() {
 
 }
 
+
 void checkMouse(XEvent *e)
 {
 	//Did the mouse move?
@@ -322,6 +326,40 @@ void screenCapture()
 {
 
 
+
+
+	static int num = 0;
+    static int vid = 0;
+    if (!vid) {
+        system("mkdir ./vid");
+        vid = 1;
+    }
+    unsigned char *data = (unsigned char *)malloc(gl.xres * gl.yres * 3);
+    glReadPixels(0, 0, gl.xres, gl.yres, GL_RGB, GL_UNSIGNED_BYTE, data);
+    char ts[32];
+    sprintf(ts, "./vid/pic%03i.ppm", num);
+    FILE *fpo = fopen(ts,"w");
+    if (fpo) {
+        fprintf(fpo, "P6\n%i %i\n255\n", gl.xres, gl.yres);
+        unsigned char *p = data;
+        //go backwards a row at a time...
+        p = p + ((gl.yres-1) * gl.xres * 3);
+        unsigned char *start = p;
+        for (int i=0; i<gl.yres; i++) {
+            for (int j=0; j<gl.xres*3; j++) {
+                fprintf(fpo, "%c",*p);
+                ++p;
+            }
+            start = start - (gl.xres*3);
+            p = start;
+        }
+        fclose(fpo);
+        char s[256];
+        sprintf(s, "convert ./vid/pic%03i.ppm ./vid/pic%03i.gif", num, num);
+        system(s);
+        unlink(ts);
+    }
+    ++num;
 }
 
 void checkKeys(XEvent *e)
@@ -351,12 +389,14 @@ void checkKeys(XEvent *e)
 	if (shift) {}
 	switch (key) {
 		case XK_s:
-			screenCapture();	    
+			screenCapture();
+			break;
+		case XK_m:
+			gl.movie ^=1;
 		case XK_w:
 			timers.recordTime(&timers.walkTime);
 			gl.walk ^= 1;
 			break;
-
 		case XK_Left:
 			lt =1;
 			break;
