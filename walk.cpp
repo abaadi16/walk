@@ -24,7 +24,7 @@
 //#include "log.h"
 #include "ppm.h"
 #include "fonts.h"
-#include "lab3http.cpp"
+#include "new.h"
 //defined types
 typedef double Flt;
 typedef double Vec[3];
@@ -490,8 +490,11 @@ void physics(void)
 	}
     }
 }
-char message[200];
-
+char myhost[] = "sleipnir.cs.csubak.edu";
+char mypage[] = "/~aaldeshash/3350/wk5/robots.txt";
+char *host = myhost;
+char *page = mypage;
+char *message;
 void render(void)
 {
     Rect r;
@@ -583,10 +586,7 @@ void render(void)
     ggprint8b(&r, 16, c, "left arrow  <- walk left");
     ggprint8b(&r, 16, c, "frame: %i", gl.walkFrame);
 
-    // Check for Startup
 
-    lab3http();
-    //extern int lab3http();
 
     if (gl.state == STATE_STARTUP) {
 	h = 100.0;
@@ -606,13 +606,14 @@ void render(void)
 	glPopMatrix();
 
 	// 
+	message = lab3http(host,page);
+
 	r.bot = gl.yres/2 +80;
 	r.left = gl.xres/2;
 	r.center =1;
 	ggprint8b(&r, 16, 0, "STARTUP SCREEN");
 	r.center =0;
 	r.left = gl.xres/2 - 100;
-	ggprint8b(&r, 16, 0,"%s",  message);
 	ggprint8b(&r, 16, 0,"%s",  message);
 
 
